@@ -3,6 +3,7 @@
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var root = document.documentElement;
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   var lang = 'ms';
   try {
     var l0 = localStorage.getItem('ni-lang');
@@ -242,6 +243,8 @@
 
   var nav = $('#nav'), links = $('#links'), ind = $('#ind');
   var ids = ['home', 'about', 'services', 'technology', 'portfolio', 'contact'];
+  var sectionElements = ids.map(function (id) { return document.getElementById(id); });
+  var homeview = $('#homeview');
   var current = 'home';
   function moveInd() {
     var on = $('.lnk.on', links);
@@ -257,9 +260,9 @@
     moveInd();
   }
   function spy() {
-    if (!$('#homeview') || $('#homeview').hidden) return;
+    if (!homeview || homeview.hidden) return;
     var y = window.innerHeight * 0.4, found = 'home';
-    ids.forEach(function (id) { var el = document.getElementById(id); if (el && el.getBoundingClientRect().top <= y) found = id; });
+    sectionElements.forEach(function (el) { if (el && el.getBoundingClientRect().top <= y) found = el.id; });
     setActive(found);
   }
   function closeMenu() { nav.classList.remove('open'); $('#menu').setAttribute('aria-expanded', 'false'); }
@@ -307,7 +310,7 @@
       ticking = false;
       var h = hero.offsetHeight || 1;
       var p = Math.min(Math.max(window.scrollY / h, 0), 1);
-      if (p !== lastP) {
+      if (!reduce && finePointer && p !== lastP) {
         lastP = p;
         hero.style.transform = 'scale(' + (1 - p * .045).toFixed(4) + ')';
         heroIn.style.opacity = String(Math.max(0, 1 - p * 1.3).toFixed(3));
@@ -315,7 +318,7 @@
       }
       nav.classList.toggle('compact', window.scrollY > 60);
       spy();
-      checkReveal();
+      if (!revealObserver) checkReveal();
     });
   }
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -336,21 +339,33 @@
     var vh = window.innerHeight;
     $$('.rv.pre').forEach(function (el) { if (el.getBoundingClientRect().top < vh * 0.9) reveal(el); });
   }
-  if (!reduce) {
-    $$('.rv').forEach(function (el) { el.classList.add(el.getBoundingClientRect().top > window.innerHeight * 0.9 ? 'pre' : 'done'); });
-    window.addEventListener('resize', checkReveal);
-    window.addEventListener('load', checkReveal);
-    [300, 900, 2000].forEach(function (t) { setTimeout(checkReveal, t); });
+  var revealObserver = null;
+  if (!reduce && 'IntersectionObserver' in window) {
+    revealObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          reveal(entry.target);
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -10% 0px' });
+    $$('.rv').forEach(function (el) {
+      if (el.getBoundingClientRect().top > window.innerHeight * 0.9) {
+        el.classList.add('pre');
+        revealObserver.observe(el);
+      } else el.classList.add('done');
+    });
   } else { $$('.rv').forEach(function (el) { el.classList.add('done'); }); }
 
   (function () {
     var cv = $('#sky'), ctx = cv.getContext('2d');
+    if (!ctx) return;
     var w = 0, h = 0, stars = [], mx = 0, my = 0, tx = 0, ty = 0, streak = null, nextStreak = 3500, raf = 0, visible = true;
     function size() {
-      var r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      var r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, finePointer ? 1.5 : 1);
       w = r.width; h = r.height; if (!w || !h) return;
       cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      var n = Math.round(Math.min(230, Math.max(100, w * h / 6000)));
+      var n = Math.round(Math.min(finePointer ? 160 : 70, Math.max(40, w * h / 9000)));
       stars = [];
       for (var i = 0; i < n; i++) stars.push({ x: Math.random(), y: Math.random(), r: .25 + Math.pow(Math.random(), 3) * 1.5, a: .35 + Math.random() * .65, s: .4 + Math.random() * 1.6, p: Math.random() * 6.28, d: .15 + Math.random() * .85, c: Math.random() < .18 });
       if (reduce) frame(0);
@@ -378,14 +393,15 @@
       }
     }
     var last = 0;
-    function loop(t) { if (!visible || document.hidden) { raf = 0; return; } if (t - last > 28) { last = t; frame(t); } raf = requestAnimationFrame(loop); }
+    function loop(t) { if (!visible || document.hidden) { raf = 0; return; } if (t - last > (finePointer ? 32 : 48)) { last = t; frame(t); } raf = requestAnimationFrame(loop); }
     function start() { if (!reduce && !raf) raf = requestAnimationFrame(loop); }
     size();
     if ('ResizeObserver' in window) new ResizeObserver(size).observe(cv); else window.addEventListener('resize', size);
-    if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) start(); }).observe(cv);
+    if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; hero.classList.toggle('offscreen', !visible); if (visible) start(); }).observe(cv);
     document.addEventListener('visibilitychange', start);
     var spot = $('.spot');
     hero.addEventListener('pointermove', function (e) {
+      if (!finePointer || reduce) return;
       var r = hero.getBoundingClientRect();
       mx = (e.clientX - r.left) / r.width * 2 - 1; my = (e.clientY - r.top) / r.height * 2 - 1;
       spot.style.transform = 'translate3d(' + (e.clientX - r.left) + 'px,' + (e.clientY - r.top) + 'px,0)';
@@ -396,6 +412,7 @@
   })();
 
   document.addEventListener('pointermove', function (e) {
+    if (!finePointer || reduce) return;
     var t = e.target.closest && e.target.closest('.thumb');
     if (!t) return;
     var r = t.getBoundingClientRect();
@@ -403,6 +420,7 @@
   }, { passive: true });
   $$('.hero .btn, .contact .btn').forEach(function (b) {
     b.addEventListener('pointermove', function (e) {
+      if (!finePointer || reduce) return;
       var r = b.getBoundingClientRect();
       b.style.setProperty('--tx', ((e.clientX - r.left - r.width / 2) * .18).toFixed(1) + 'px');
       b.style.setProperty('--ty', ((e.clientY - r.top - r.height / 2) * .28).toFixed(1) + 'px');
