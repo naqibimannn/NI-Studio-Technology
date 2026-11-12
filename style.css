@@ -433,3 +433,11 @@ body.swap [data-en] { opacity: 0; }
   .rv.pre { opacity: 1; transform: none; }
 }
 [data-theme="dark"] .tech-logo-grid img.tech-logo-yeahhost { filter: brightness(0) invert(1); }
+
+/* Avoid repainting decorative effects while the hero is off screen. */
+.hero.offscreen .haze { animation-play-state: paused; }
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  .spot { display: none; }
+  .haze { animation: none; }
+  .hero, .hero-in { will-change: auto; }
+}
