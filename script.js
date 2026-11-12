@@ -312,7 +312,6 @@
       var p = Math.min(Math.max(window.scrollY / h, 0), 1);
       if (!reduce && finePointer && p !== lastP) {
         lastP = p;
-        hero.style.transform = 'scale(' + (1 - p * .045).toFixed(4) + ')';
         heroIn.style.opacity = String(Math.max(0, 1 - p * 1.3).toFixed(3));
         heroIn.style.transform = 'translate3d(0,' + (-p * 42).toFixed(1) + 'px,0)';
       }
