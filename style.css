@@ -441,3 +441,5 @@ body.swap [data-en] { opacity: 0; }
   .haze { animation: none; }
   .hero, .hero-in { will-change: auto; }
 }
+
+[data-theme="dark"] .tech-logo-grid img.tech-logo-mono { filter: brightness(0) invert(1); }
