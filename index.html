@@ -93,10 +93,8 @@
 
   <script>
   try { var _t = localStorage.getItem('ni-theme'); document.documentElement.setAttribute('data-theme', _t === 'dark' ? 'dark' : 'light'); } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
-  var _v = Date.now();
-  document.write('<link rel="stylesheet" href="style.css?v=' + _v + '">');
   </script>
-  <noscript><link rel="stylesheet" href="style.css"></noscript>
+  <link rel="stylesheet" href="style.css?v=20261112-perf1">
 
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
     <defs>
@@ -440,10 +438,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script>
-  var _v = Date.now();
-  document.write('<script src="script.js?v=' + _v + '"><\/script>');
-  </script>
-  <noscript><script src="script.js"></script></noscript>
+  <script src="script.js?v=20261112-perf1" defer></script>
 </body>
 </html>
