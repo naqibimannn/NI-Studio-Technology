@@ -241,7 +241,7 @@
   });
 
   var nav = $('#nav'), links = $('#links'), ind = $('#ind');
-  var ids = ['home', 'about', 'services', 'portfolio', 'contact'];
+  var ids = ['home', 'about', 'services', 'technology', 'portfolio', 'contact'];
   var current = 'home';
   function moveInd() {
     var on = $('.lnk.on', links);
